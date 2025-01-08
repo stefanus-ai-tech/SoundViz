@@ -15,7 +15,7 @@ const SpiralVisualizer = ({ audioData }: SpiralVisualizerProps) => {
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Setup scene
+    // Setup scene with black background
     sceneRef.current = new THREE.Scene();
     sceneRef.current.fog = new THREE.Fog(0x000000, 1, 30);
     
@@ -39,8 +39,8 @@ const SpiralVisualizer = ({ audioData }: SpiralVisualizerProps) => {
     rendererRef.current.setClearColor(0x000000, 0);
     containerRef.current.appendChild(rendererRef.current.domElement);
 
-    // Create spiral points
-    const colors = [0xff1493, 0x00ff88, 0x4169e1, 0xffd700, 0xff4500];
+    // Create spiral points with brighter colors
+    const colors = [0xff69b4, 0x00ff99, 0x4169e1, 0xffd700, 0xff6347];
     for (let i = 0; i < colors.length; i++) {
       const geometry = new THREE.BufferGeometry();
       const positions = new Float32Array(128 * 3);
@@ -57,10 +57,10 @@ const SpiralVisualizer = ({ audioData }: SpiralVisualizerProps) => {
       geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
       
       const material = new THREE.PointsMaterial({
-        size: 0.1,
+        size: 0.15,
         color: color,
         transparent: true,
-        opacity: 0.8,
+        opacity: 0.9,
       });
 
       const points = new THREE.Points(geometry, material);

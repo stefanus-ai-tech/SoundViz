@@ -46,7 +46,7 @@ const WaveVisualizer = ({ audioData }: WaveVisualizerProps) => {
     
     for (let i = 0; i < 128; i++) {
       const hue = (i / 128) * 360;
-      const color = new THREE.Color(`hsl(${hue}, 100%, 50%)`);
+      const color = new THREE.Color(`hsl(${hue}, 100%, 70%)`);
       colors[i * 3] = color.r;
       colors[i * 3 + 1] = color.g;
       colors[i * 3 + 2] = color.b;

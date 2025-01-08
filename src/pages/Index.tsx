@@ -138,7 +138,7 @@ const Index = () => {
   }[visualizerType];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-purple-900 to-black text-white p-4">
+    <div className="min-h-screen bg-black text-white p-4">
       <div className="max-w-7xl mx-auto relative">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500">
@@ -181,7 +181,7 @@ const Index = () => {
           </Sheet>
         </div>
 
-        <div className="aspect-video bg-black/20 rounded-lg backdrop-blur-sm border border-white/10 overflow-hidden mb-8 shadow-xl">
+        <div className="aspect-video bg-black rounded-lg backdrop-blur-sm border border-white/10 overflow-hidden mb-8 shadow-xl">
           <VisualizerComponent audioData={audioData} />
         </div>
 

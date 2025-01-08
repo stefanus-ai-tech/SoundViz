@@ -15,7 +15,7 @@ const CircularVisualizer = ({ audioData }: CircularVisualizerProps) => {
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Setup scene
+    // Setup scene with black background
     sceneRef.current = new THREE.Scene();
     sceneRef.current.fog = new THREE.Fog(0x000000, 1, 30);
     
@@ -39,14 +39,14 @@ const CircularVisualizer = ({ audioData }: CircularVisualizerProps) => {
     rendererRef.current.setClearColor(0x000000, 0);
     containerRef.current.appendChild(rendererRef.current.domElement);
 
-    // Create particles with rainbow colors
+    // Create particles with brighter rainbow colors
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(128 * 3);
     const colors = new Float32Array(128 * 3);
 
     for (let i = 0; i < 128; i++) {
       const hue = (i / 128) * 360;
-      const color = new THREE.Color(`hsl(${hue}, 100%, 50%)`);
+      const color = new THREE.Color(`hsl(${hue}, 100%, 70%)`);
       colors[i * 3] = color.r;
       colors[i * 3 + 1] = color.g;
       colors[i * 3 + 2] = color.b;

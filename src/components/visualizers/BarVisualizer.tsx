@@ -15,7 +15,7 @@ const BarVisualizer = ({ audioData }: BarVisualizerProps) => {
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Setup scene
+    // Setup scene with black background
     sceneRef.current = new THREE.Scene();
     sceneRef.current.fog = new THREE.Fog(0x000000, 1, 30);
     
@@ -39,15 +39,15 @@ const BarVisualizer = ({ audioData }: BarVisualizerProps) => {
     rendererRef.current.setClearColor(0x000000, 0);
     containerRef.current.appendChild(rendererRef.current.domElement);
 
-    // Create bars with rainbow colors
+    // Create bars with brighter rainbow colors
     const geometry = new THREE.BoxGeometry(0.5, 1, 0.5);
     const materials = Array(32).fill(null).map((_, i) => {
       const hue = (i / 32) * 360;
       return new THREE.MeshPhongMaterial({ 
-        color: new THREE.Color(`hsl(${hue}, 100%, 50%)`),
-        shininess: 100,
-        specular: new THREE.Color(`hsl(${hue}, 100%, 75%)`),
-        emissive: new THREE.Color(`hsl(${hue}, 100%, 25%)`)
+        color: new THREE.Color(`hsl(${hue}, 100%, 70%)`),
+        shininess: 150,
+        specular: new THREE.Color(`hsl(${hue}, 100%, 90%)`),
+        emissive: new THREE.Color(`hsl(${hue}, 100%, 40%)`),
       });
     });
 
