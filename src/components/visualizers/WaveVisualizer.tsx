@@ -17,6 +17,7 @@ const WaveVisualizer = ({ audioData }: WaveVisualizerProps) => {
 
     // Setup scene
     sceneRef.current = new THREE.Scene();
+    sceneRef.current.fog = new THREE.Fog(0x000000, 1, 30);
     
     // Setup camera
     cameraRef.current = new THREE.PerspectiveCamera(
@@ -26,6 +27,8 @@ const WaveVisualizer = ({ audioData }: WaveVisualizerProps) => {
       1000
     );
     cameraRef.current.position.z = 15;
+    cameraRef.current.position.y = 5;
+    cameraRef.current.lookAt(0, 0, 0);
 
     // Setup renderer
     rendererRef.current = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -33,6 +36,7 @@ const WaveVisualizer = ({ audioData }: WaveVisualizerProps) => {
       containerRef.current.clientWidth,
       containerRef.current.clientHeight
     );
+    rendererRef.current.setClearColor(0x000000, 0);
     containerRef.current.appendChild(rendererRef.current.domElement);
 
     // Create wave
@@ -40,28 +44,66 @@ const WaveVisualizer = ({ audioData }: WaveVisualizerProps) => {
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(points, 3));
 
-    const material = new THREE.LineBasicMaterial({ color: 0x00ff00 });
+    const material = new THREE.LineBasicMaterial({ 
+      color: 0x00ff88,
+      linewidth: 2,
+    });
     waveRef.current = new THREE.Line(geometry, material);
     sceneRef.current.add(waveRef.current);
 
-    // Add lights
-    const ambientLight = new THREE.AmbientLight(0x404040);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.position.set(1, 1, 1);
-    sceneRef.current.add(ambientLight);
-    sceneRef.current.add(directionalLight);
+    // Add ground plane for reflection
+    const groundGeometry = new THREE.PlaneGeometry(50, 50);
+    const groundMaterial = new THREE.MeshPhongMaterial({
+      color: 0x000000,
+      shininess: 100,
+      specular: 0x222222,
+      transparent: true,
+      opacity: 0.5
+    });
+    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -5;
+    sceneRef.current.add(ground);
 
+    // Add lights
+    const ambientLight = new THREE.AmbientLight(0x111111);
+    const spotLight = new THREE.SpotLight(0xffffff, 1);
+    spotLight.position.set(0, 15, 0);
+    spotLight.angle = Math.PI / 4;
+    spotLight.penumbra = 0.5;
+    
+    sceneRef.current.add(ambientLight);
+    sceneRef.current.add(spotLight);
+
+    let frame = 0;
     // Animation loop
     const animate = () => {
       if (!sceneRef.current || !cameraRef.current || !rendererRef.current) return;
+
+      frame += 0.005;
+      cameraRef.current.position.x = Math.sin(frame) * 15;
+      cameraRef.current.position.z = Math.cos(frame) * 15;
+      cameraRef.current.lookAt(0, 0, 0);
 
       requestAnimationFrame(animate);
       rendererRef.current.render(sceneRef.current, cameraRef.current);
     };
     animate();
 
+    // Handle window resize
+    const handleResize = () => {
+      if (!containerRef.current || !cameraRef.current || !rendererRef.current) return;
+      
+      cameraRef.current.aspect = containerRef.current.clientWidth / containerRef.current.clientHeight;
+      cameraRef.current.updateProjectionMatrix();
+      rendererRef.current.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
+    };
+
+    window.addEventListener('resize', handleResize);
+
     // Cleanup
     return () => {
+      window.removeEventListener('resize', handleResize);
       if (containerRef.current && rendererRef.current) {
         containerRef.current.removeChild(rendererRef.current.domElement);
       }
@@ -73,9 +115,11 @@ const WaveVisualizer = ({ audioData }: WaveVisualizerProps) => {
 
     const positions = waveRef.current.geometry.attributes.position.array as Float32Array;
     for (let i = 0; i < audioData.length; i++) {
-      positions[i * 3] = (i / audioData.length) * 20 - 10;
+      const angle = (i / audioData.length) * Math.PI * 2;
+      const radius = 8 + (audioData[i] / 128.0) * 2;
+      positions[i * 3] = Math.cos(angle) * radius;
       positions[i * 3 + 1] = (audioData[i] / 128.0) * 3;
-      positions[i * 3 + 2] = 0;
+      positions[i * 3 + 2] = Math.sin(angle) * radius;
     }
     waveRef.current.geometry.attributes.position.needsUpdate = true;
   }, [audioData]);
