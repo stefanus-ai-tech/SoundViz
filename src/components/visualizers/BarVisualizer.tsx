@@ -18,7 +18,7 @@ const BarVisualizer = ({ audioData }: BarVisualizerProps) => {
     // Setup scene with black background
     sceneRef.current = new THREE.Scene();
     sceneRef.current.fog = new THREE.Fog(0x000000, 1, 30);
-    
+
     // Setup camera
     cameraRef.current = new THREE.PerspectiveCamera(
       75,
@@ -30,26 +30,32 @@ const BarVisualizer = ({ audioData }: BarVisualizerProps) => {
     cameraRef.current.position.y = 5;
     cameraRef.current.lookAt(0, 0, 0);
 
-    // Setup renderer
-    rendererRef.current = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    // In the setup effect of BarVisualizer.tsx
+    rendererRef.current = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+    });
     rendererRef.current.setSize(
       containerRef.current.clientWidth,
       containerRef.current.clientHeight
     );
     rendererRef.current.setClearColor(0x000000, 0);
+    rendererRef.current.domElement.setAttribute('data-engine', 'three.js'); // Add this line
     containerRef.current.appendChild(rendererRef.current.domElement);
 
     // Create bars with brighter rainbow colors
     const geometry = new THREE.BoxGeometry(0.5, 1, 0.5);
-    const materials = Array(32).fill(null).map((_, i) => {
-      const hue = (i / 32) * 360;
-      return new THREE.MeshPhongMaterial({ 
-        color: new THREE.Color(`hsl(${hue}, 100%, 70%)`),
-        shininess: 150,
-        specular: new THREE.Color(`hsl(${hue}, 100%, 90%)`),
-        emissive: new THREE.Color(`hsl(${hue}, 100%, 40%)`),
+    const materials = Array(32)
+      .fill(null)
+      .map((_, i) => {
+        const hue = (i / 32) * 360;
+        return new THREE.MeshPhongMaterial({
+          color: new THREE.Color(`hsl(${hue}, 100%, 70%)`),
+          shininess: 150,
+          specular: new THREE.Color(`hsl(${hue}, 100%, 90%)`),
+          emissive: new THREE.Color(`hsl(${hue}, 100%, 40%)`),
+        });
       });
-    });
 
     for (let i = 0; i < 32; i++) {
       const bar = new THREE.Mesh(geometry, materials[i]);
@@ -69,7 +75,7 @@ const BarVisualizer = ({ audioData }: BarVisualizerProps) => {
       shininess: 100,
       specular: 0x222222,
       transparent: true,
-      opacity: 0.5
+      opacity: 0.5,
     });
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
     ground.rotation.x = -Math.PI / 2;
@@ -83,14 +89,15 @@ const BarVisualizer = ({ audioData }: BarVisualizerProps) => {
     spotLight.angle = Math.PI / 4;
     spotLight.penumbra = 0.5;
     spotLight.castShadow = true;
-    
+
     sceneRef.current.add(ambientLight);
     sceneRef.current.add(spotLight);
 
     let frame = 0;
     // Animation loop
     const animate = () => {
-      if (!sceneRef.current || !cameraRef.current || !rendererRef.current) return;
+      if (!sceneRef.current || !cameraRef.current || !rendererRef.current)
+        return;
 
       frame += 0.005;
       cameraRef.current.position.x = Math.sin(frame) * 15;
@@ -104,11 +111,16 @@ const BarVisualizer = ({ audioData }: BarVisualizerProps) => {
 
     // Handle window resize
     const handleResize = () => {
-      if (!containerRef.current || !cameraRef.current || !rendererRef.current) return;
-      
-      cameraRef.current.aspect = containerRef.current.clientWidth / containerRef.current.clientHeight;
+      if (!containerRef.current || !cameraRef.current || !rendererRef.current)
+        return;
+
+      cameraRef.current.aspect =
+        containerRef.current.clientWidth / containerRef.current.clientHeight;
       cameraRef.current.updateProjectionMatrix();
-      rendererRef.current.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
+      rendererRef.current.setSize(
+        containerRef.current.clientWidth,
+        containerRef.current.clientHeight
+      );
     };
 
     window.addEventListener('resize', handleResize);
@@ -128,7 +140,7 @@ const BarVisualizer = ({ audioData }: BarVisualizerProps) => {
       if (audioData && audioData[i]) {
         const scale = (audioData[i] / 128.0) * 3;
         bar.scale.y = scale;
-        bar.position.y = (scale * 0.5) - 0.5;
+        bar.position.y = scale * 0.5 - 0.5;
       }
     });
   }, [audioData]);
