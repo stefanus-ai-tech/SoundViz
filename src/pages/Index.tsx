@@ -9,12 +9,13 @@ import { toast } from "sonner";
 import BarVisualizer from '@/components/visualizers/BarVisualizer';
 import WaveVisualizer from '@/components/visualizers/WaveVisualizer';
 import CircularVisualizer from '@/components/visualizers/CircularVisualizer';
+import SpiralVisualizer from '@/components/visualizers/SpiralVisualizer';
 
 const Index = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioData, setAudioData] = useState<Uint8Array>(new Uint8Array(128).fill(0));
   const [progress, setProgress] = useState(0);
-  const [visualizerType, setVisualizerType] = useState<'bar' | 'wave' | 'circular'>('bar');
+  const [visualizerType, setVisualizerType] = useState<'bar' | 'wave' | 'circular' | 'spiral'>('bar');
   const [currentAudioFile, setCurrentAudioFile] = useState<File | null>(null);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -133,14 +134,14 @@ const Index = () => {
     bar: BarVisualizer,
     wave: WaveVisualizer,
     circular: CircularVisualizer,
+    spiral: SpiralVisualizer,
   }[visualizerType];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white p-4">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-purple-900 to-black text-white p-4">
       <div className="max-w-7xl mx-auto relative">
-        {/* Header */}
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
+          <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500">
             Sound Visualizer
           </h1>
           <Sheet>
@@ -170,31 +171,33 @@ const Index = () => {
                     <RadioGroupItem value="circular" id="circular" />
                     <Label htmlFor="circular">Circular Visualization</Label>
                   </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="spiral" id="spiral" />
+                    <Label htmlFor="spiral">Spiral Visualization</Label>
+                  </div>
                 </RadioGroup>
               </div>
             </SheetContent>
           </Sheet>
         </div>
 
-        {/* Main Content */}
         <div className="aspect-video bg-black/20 rounded-lg backdrop-blur-sm border border-white/10 overflow-hidden mb-8 shadow-xl">
           <VisualizerComponent audioData={audioData} />
         </div>
 
-        {/* Controls */}
         <div className="space-y-4">
           <div className="flex flex-wrap gap-4">
             <Button
               onClick={togglePlayPause}
               variant="secondary"
-              className="w-full sm:w-auto bg-white/10 hover:bg-white/20 backdrop-blur-sm"
+              className="w-full sm:w-auto bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 hover:opacity-90 text-white backdrop-blur-sm"
             >
               {isPlaying ? <Pause className="mr-2" /> : <Play className="mr-2" />}
               {isPlaying ? 'Pause' : 'Play'}
             </Button>
             <Button
               variant="secondary"
-              className="w-full sm:w-auto bg-white/10 hover:bg-white/20 backdrop-blur-sm"
+              className="w-full sm:w-auto bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 hover:opacity-90 text-white backdrop-blur-sm"
               onClick={() => document.getElementById('file-upload')?.click()}
             >
               <Upload className="mr-2" />
@@ -202,7 +205,7 @@ const Index = () => {
             </Button>
             <Button
               variant="secondary"
-              className="w-full sm:w-auto bg-white/10 hover:bg-white/20 backdrop-blur-sm"
+              className="w-full sm:w-auto bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 hover:opacity-90 text-white backdrop-blur-sm"
               onClick={handleDownload}
             >
               <Download className="mr-2" />

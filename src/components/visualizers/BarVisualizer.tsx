@@ -39,17 +39,20 @@ const BarVisualizer = ({ audioData }: BarVisualizerProps) => {
     rendererRef.current.setClearColor(0x000000, 0);
     containerRef.current.appendChild(rendererRef.current.domElement);
 
-    // Create bars
+    // Create bars with rainbow colors
     const geometry = new THREE.BoxGeometry(0.5, 1, 0.5);
-    const material = new THREE.MeshPhongMaterial({ 
-      color: 0x00ff88,
-      shininess: 100,
-      specular: 0x00ff88,
-      emissive: 0x002211
+    const materials = Array(32).fill(null).map((_, i) => {
+      const hue = (i / 32) * 360;
+      return new THREE.MeshPhongMaterial({ 
+        color: new THREE.Color(`hsl(${hue}, 100%, 50%)`),
+        shininess: 100,
+        specular: new THREE.Color(`hsl(${hue}, 100%, 75%)`),
+        emissive: new THREE.Color(`hsl(${hue}, 100%, 25%)`)
+      });
     });
 
     for (let i = 0; i < 32; i++) {
-      const bar = new THREE.Mesh(geometry, material);
+      const bar = new THREE.Mesh(geometry, materials[i]);
       const angle = (i / 32) * Math.PI * 2;
       const radius = 8;
       bar.position.x = Math.cos(angle) * radius;

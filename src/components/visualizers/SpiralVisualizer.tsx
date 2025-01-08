@@ -1,16 +1,16 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
-interface WaveVisualizerProps {
+interface SpiralVisualizerProps {
   audioData: Uint8Array;
 }
 
-const WaveVisualizer = ({ audioData }: WaveVisualizerProps) => {
+const SpiralVisualizer = ({ audioData }: SpiralVisualizerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-  const waveRef = useRef<THREE.Line | null>(null);
+  const pointsRef = useRef<THREE.Points[]>([]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -39,29 +39,34 @@ const WaveVisualizer = ({ audioData }: WaveVisualizerProps) => {
     rendererRef.current.setClearColor(0x000000, 0);
     containerRef.current.appendChild(rendererRef.current.domElement);
 
-    // Create wave with gradient colors
-    const points = new Float32Array(128 * 3);
-    const colors = new Float32Array(128 * 3);
-    const geometry = new THREE.BufferGeometry();
-    
-    for (let i = 0; i < 128; i++) {
-      const hue = (i / 128) * 360;
-      const color = new THREE.Color(`hsl(${hue}, 100%, 50%)`);
-      colors[i * 3] = color.r;
-      colors[i * 3 + 1] = color.g;
-      colors[i * 3 + 2] = color.b;
+    // Create spiral points
+    const colors = [0xff1493, 0x00ff88, 0x4169e1, 0xffd700, 0xff4500];
+    for (let i = 0; i < colors.length; i++) {
+      const geometry = new THREE.BufferGeometry();
+      const positions = new Float32Array(128 * 3);
+      const color = new THREE.Color(colors[i]);
+      
+      for (let j = 0; j < 128; j++) {
+        const angle = (j / 128) * Math.PI * 8;
+        const radius = 1 + (j / 128) * 4;
+        positions[j * 3] = Math.cos(angle) * radius;
+        positions[j * 3 + 1] = (j / 128) * 4 - 2;
+        positions[j * 3 + 2] = Math.sin(angle) * radius;
+      }
+
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      
+      const material = new THREE.PointsMaterial({
+        size: 0.1,
+        color: color,
+        transparent: true,
+        opacity: 0.8,
+      });
+
+      const points = new THREE.Points(geometry, material);
+      sceneRef.current.add(points);
+      pointsRef.current.push(points);
     }
-
-    geometry.setAttribute('position', new THREE.BufferAttribute(points, 3));
-    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-    const material = new THREE.LineBasicMaterial({ 
-      vertexColors: true,
-      linewidth: 2,
-    });
-    
-    waveRef.current = new THREE.Line(geometry, material);
-    sceneRef.current.add(waveRef.current);
 
     // Add ground plane for reflection
     const groundGeometry = new THREE.PlaneGeometry(50, 50);
@@ -97,6 +102,10 @@ const WaveVisualizer = ({ audioData }: WaveVisualizerProps) => {
       cameraRef.current.position.z = Math.cos(frame) * 15;
       cameraRef.current.lookAt(0, 0, 0);
 
+      pointsRef.current.forEach((points, i) => {
+        points.rotation.y += 0.002 * (i + 1);
+      });
+
       requestAnimationFrame(animate);
       rendererRef.current.render(sceneRef.current, cameraRef.current);
     };
@@ -123,20 +132,23 @@ const WaveVisualizer = ({ audioData }: WaveVisualizerProps) => {
   }, []);
 
   useEffect(() => {
-    if (!waveRef.current) return;
-
-    const positions = waveRef.current.geometry.attributes.position.array as Float32Array;
-    for (let i = 0; i < audioData.length; i++) {
-      const angle = (i / audioData.length) * Math.PI * 2;
-      const radius = 8 + (audioData[i] / 128.0) * 2;
-      positions[i * 3] = Math.cos(angle) * radius;
-      positions[i * 3 + 1] = (audioData[i] / 128.0) * 3;
-      positions[i * 3 + 2] = Math.sin(angle) * radius;
-    }
-    waveRef.current.geometry.attributes.position.needsUpdate = true;
+    pointsRef.current.forEach((points, i) => {
+      const positions = points.geometry.attributes.position.array as Float32Array;
+      for (let j = 0; j < audioData.length; j++) {
+        const idx = j * 3;
+        const angle = (j / audioData.length) * Math.PI * 8;
+        const radius = 1 + (j / audioData.length) * 4;
+        const amplitude = (audioData[j] / 128.0) * 2;
+        
+        positions[idx] = Math.cos(angle) * (radius + amplitude);
+        positions[idx + 1] = (j / audioData.length) * 4 - 2 + amplitude;
+        positions[idx + 2] = Math.sin(angle) * (radius + amplitude);
+      }
+      points.geometry.attributes.position.needsUpdate = true;
+    });
   }, [audioData]);
 
   return <div ref={containerRef} className="w-full h-full" />;
 };
 
-export default WaveVisualizer;
+export default SpiralVisualizer;

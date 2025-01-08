@@ -39,20 +39,17 @@ const CircularVisualizer = ({ audioData }: CircularVisualizerProps) => {
     rendererRef.current.setClearColor(0x000000, 0);
     containerRef.current.appendChild(rendererRef.current.domElement);
 
-    // Create particles
+    // Create particles with rainbow colors
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(128 * 3);
     const colors = new Float32Array(128 * 3);
 
     for (let i = 0; i < 128; i++) {
-      const angle = (i / 128) * Math.PI * 2;
-      positions[i * 3] = Math.cos(angle) * 5;
-      positions[i * 3 + 1] = Math.sin(angle) * 5;
-      positions[i * 3 + 2] = 0;
-
-      colors[i * 3] = 0;
-      colors[i * 3 + 1] = 1;
-      colors[i * 3 + 2] = 0.5;
+      const hue = (i / 128) * 360;
+      const color = new THREE.Color(`hsl(${hue}, 100%, 50%)`);
+      colors[i * 3] = color.r;
+      colors[i * 3 + 1] = color.g;
+      colors[i * 3 + 2] = color.b;
     }
 
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -137,8 +134,8 @@ const CircularVisualizer = ({ audioData }: CircularVisualizerProps) => {
       const angle = (i / audioData.length) * Math.PI * 2;
       const radius = 5 + (audioData[i] / 128.0) * 2;
       positions[i * 3] = Math.cos(angle) * radius;
-      positions[i * 3 + 1] = Math.sin(angle) * radius;
-      positions[i * 3 + 2] = (audioData[i] / 128.0) * 2;
+      positions[i * 3 + 1] = (audioData[i] / 128.0) * 2;
+      positions[i * 3 + 2] = Math.sin(angle) * radius;
     }
     pointsRef.current.geometry.attributes.position.needsUpdate = true;
   }, [audioData]);
