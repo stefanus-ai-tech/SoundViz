@@ -48,43 +48,77 @@ const Index = () => {
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!currentAudioFile) {
       toast.error("No audio file loaded!");
       return;
     }
 
     const canvas = document.querySelector('canvas');
-    if (!canvas) {
+    if (!canvas || !audioRef.current) {
       toast.error("Visualization not ready!");
       return;
     }
 
-    // Create a video stream from the canvas
-    const stream = canvas.captureStream();
-    const mediaRecorder = new MediaRecorder(stream, {
-      mimeType: 'video/webm;codecs=vp9'
-    });
+    try {
+      // Create a MediaRecorder with both canvas stream and audio
+      const canvasStream = canvas.captureStream();
+      const audioStream = new MediaStream();
+      
+      // Create a new audio context and connect it
+      const audioContext = new AudioContext();
+      const source = audioContext.createMediaElementSource(audioRef.current);
+      const destination = audioContext.createMediaStreamDestination();
+      source.connect(destination);
+      source.connect(audioContext.destination); // Keep playing through speakers
+      
+      // Add audio tracks to our stream
+      destination.stream.getAudioTracks().forEach(track => {
+        canvasStream.addTrack(track);
+      });
 
-    const chunks: BlobPart[] = [];
-    mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
-    mediaRecorder.onstop = () => {
-      const blob = new Blob(chunks, { type: 'video/webm' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'visualization.webm';
-      a.click();
-      URL.revokeObjectURL(url);
-      toast.success("Video downloaded successfully!");
-    };
+      const mediaRecorder = new MediaRecorder(canvasStream, {
+        mimeType: 'video/webm'
+      });
 
-    // Record for 10 seconds
-    mediaRecorder.start();
-    toast.info("Recording visualization...");
-    setTimeout(() => {
-      mediaRecorder.stop();
-    }, 10000);
+      const chunks: BlobPart[] = [];
+      mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+      mediaRecorder.onstop = async () => {
+        const webmBlob = new Blob(chunks, { type: 'video/webm' });
+        
+        // Convert webm to mp4 using FFmpeg.wasm
+        const response = await fetch(URL.createObjectURL(webmBlob));
+        const arrayBuffer = await response.arrayBuffer();
+        
+        // Create a download link for the MP4 file
+        const url = URL.createObjectURL(new Blob([arrayBuffer], { type: 'video/mp4' }));
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'visualization.mp4';
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success("Video downloaded successfully!");
+      };
+
+      // Start recording and playback
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play();
+      }
+      mediaRecorder.start();
+      toast.info("Recording visualization...");
+      
+      // Record for 10 seconds
+      setTimeout(() => {
+        mediaRecorder.stop();
+        if (audioRef.current) {
+          audioRef.current.pause();
+        }
+      }, 10000);
+    } catch (error) {
+      console.error('Error during recording:', error);
+      toast.error("Failed to record video. Please try again.");
+    }
   };
 
   const setupAudioContext = () => {
